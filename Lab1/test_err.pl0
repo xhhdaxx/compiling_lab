@@ -1,0 +1,8 @@
+var x, y;
+begin
+    a$ := 3;  
+    x := 3@ + 5;
+    y =: 10;
+    z := "hello;  
+    { 未闭合注释  
+end. 

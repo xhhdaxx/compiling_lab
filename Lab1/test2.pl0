@@ -1,0 +1,6 @@
+{ 这是一个注释 } 
+var x := 123;
+if x <= 10 then
+    writeln "Hello World"
+else
+    x := x + 1;
