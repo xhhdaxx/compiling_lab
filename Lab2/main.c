@@ -20,6 +20,9 @@ int pos = 0;                // 当前字符位置
 int current_code = 0;       // 当前Token的数值编号
 char sym;                   // 映射到简易文法的字符 (+, *, (, ), i, ;, #)
 char lexeme[100];           // Token的文本值
+int error_pos = -1;         // 错误位置
+char error_sym = 0;         // 错误符号
+
 
 // --- 3. 定义 Token 类型 ---
 enum {
@@ -47,6 +50,7 @@ void error(const char *msg);
 // 词法分析器
 // -----------------------------------------------------------
 void advance() {
+    int token_start = pos;   // 记录本 token 开始位置
     current_code = 0;
     lexeme[0] = '\0';
 
@@ -133,6 +137,9 @@ void advance() {
             break;
     }
 
+    error_pos = token_start;
+    error_sym = sym;
+
     printf("   [Token] Code=%-2d Val=\"%-4s\" -> 识别为: %c\n",
            current_code, lexeme, sym);
 }
@@ -216,9 +223,38 @@ int F() {
 // -----------------------------------------------------------
 // 错误处理
 // -----------------------------------------------------------
+char error_msg[256] = {0};
+int error_detected = 0;
+
 void error(const char *msg) {
-    printf("   \033[31m[Error]\033[0m 错误内容'%s': %s\n", lexeme, msg);
+    error_detected = 1;
+    snprintf(error_msg, sizeof(error_msg),
+             "   \033[31m[Error]\033[0m 错误内容'%s': %s\n",
+             lexeme, msg);
 }
+
+const char* classify_error() {
+    // 1. 缺少封闭括号 -> 最高优先级
+    int left = 0, right = 0;
+    for (int i = 0; buffer[i]; i++) {
+        if (buffer[i] == '(') left++;
+        if (buffer[i] == ')') right++;
+    }
+    if (left > right)
+        return "缺少封闭括号";
+
+    // 2. 若出错符号为 ';' 或 ')', 多为缺少运算量
+    if (error_sym == ';' || error_sym == ')' || error_sym == '+' || error_sym == '*')
+        return "缺少运算量";
+
+    // 3. 若出错符号为 'i' 或 '('，但规则失败，多为缺少运算符
+    if (error_sym == 'i' || error_sym == '(')
+        return "缺少运算符";
+
+    return "其他语法错误";
+}
+
+
 
 // -----------------------------------------------------------
 // 单行分析入口
@@ -255,8 +291,23 @@ void analyze_line(int line_num) {
         }
     }
     else {
-        printf("结果: \033[31m错误 (Error)\033[0m\n");
+        printf("%s", error_msg);
+
+        printf("------------------- 具体情况分析 -------------------\n");
+        printf("1. \033[31m错误位置: \033[0m\n");
+
+        printf("%s\n", buffer);
+
+        // 画出 ^~~~~
+        for (int i = 0; i < error_pos; i++)
+            printf(" ");
+        printf("^~~~~~~\n");
+
+        printf("2. \033[31m错误原因: \033[0m%s\n", classify_error());
+        printf("--------------------------------------------------\n");
+        printf("结果: \033[31m错误 (Error)\033[0m\n\n");
     }
+
 
     printf("\n");
 }
