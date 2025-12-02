@@ -118,205 +118,205 @@ int getsym() {
 
         switch (state) {
 
-        //=========================
-        //     初始状态
-        //=========================
-        case STATE_START:
+            //=========================
+            //     初始状态
+            //=========================
+            case STATE_START:
 
-            // 空白
-            while (isspace(ch)) getch();
+                // 空白
+                while (isspace(ch)) getch();
 
-            // 标识符
-            if (isalpha(ch)) {
-                state = STATE_INID;
-                buf[k++] = ch;
-                getch();
-                break;
-            }
-
-            // 数字
-            if (isdigit(ch)) {
-                state = STATE_INNUM;
-                buf[k++] = ch;
-                getch();
-                break;
-            }
-
-            // :=
-            if (ch == ':') {
-                state = STATE_INASSIGN;
-                buf[k++] = ':';
-                getch();
-                break;
-            }
-
-            // 注释 { ... }
-            if (ch == '{') {
-                state = STATE_INCOMMENT;
-                getch(); // 跳过 {
-                break;
-            }
-
-            // 字符串
-            if (ch == '"') {
-                state = STATE_INSTRING;
-                getch(); // 跳过开头 "
-                break;
-            }
-
-            // EOF
-            if (ch == EOF) return SYM_NULL;
-
-            // <, <=, <>
-            if (ch == '<') {
-                getch();
-                if (ch == '=') {
+                // 标识符
+                if (isalpha(ch)) {
+                    state = STATE_INID;
+                    buf[k++] = ch;
                     getch();
-                    print_token(SYM_LEQ, "<=");
-                    return SYM_LEQ;
+                    break;
                 }
+
+                // 数字
+                if (isdigit(ch)) {
+                    state = STATE_INNUM;
+                    buf[k++] = ch;
+                    getch();
+                    break;
+                }
+
+                // :=
+                if (ch == ':') {
+                    state = STATE_INASSIGN;
+                    buf[k++] = ':';
+                    getch();
+                    break;
+                }
+
+                // 注释 { ... }
+                if (ch == '{') {
+                    state = STATE_INCOMMENT;
+                    getch(); // 跳过 {
+                    break;
+                }
+
+                // 字符串
+                if (ch == '"') {
+                    state = STATE_INSTRING;
+                    getch(); // 跳过开头 "
+                    break;
+                }
+
+                // EOF
+                if (ch == EOF) return SYM_NULL;
+
+                // <, <=, <>
+                if (ch == '<') {
+                    getch();
+                    if (ch == '=') {
+                        getch();
+                        print_token(SYM_LEQ, "<=");
+                        return SYM_LEQ;
+                    }
+                    if (ch == '>') {
+                        getch();
+                        print_token(SYM_NEQ, "<>");
+                        return SYM_NEQ;
+                    }
+                    print_token(SYM_LES, "<");
+                    return SYM_LES;
+                }
+    
+                // >, >=
                 if (ch == '>') {
                     getch();
-                    print_token(SYM_NEQ, "<>");
-                    return SYM_NEQ;
+                    if (ch == '=') {
+                        getch();
+                        print_token(SYM_GEQ, ">=");
+                        return SYM_GEQ;
+                    }
+                    print_token(SYM_GTR, ">");
+                    return SYM_GTR;
                 }
-                print_token(SYM_LES, "<");
-                return SYM_LES;
-            }
- 
-            // >, >=
-            if (ch == '>') {
+
+                // 单字符符号 + 错误符号
+                int cur = ch;
                 getch();
-                if (ch == '=') {
-                    getch();
-                    print_token(SYM_GEQ, ">=");
-                    return SYM_GEQ;
+
+                // 单字符符号
+                {
+                    switch (cur) {
+                        case '+': print_token(SYM_PLUS, "+"); return SYM_PLUS;
+                        case '-': print_token(SYM_MINUS, "-"); return SYM_MINUS;
+                        case '*': print_token(SYM_TIMES, "*"); return SYM_TIMES;
+                        case '/': print_token(SYM_SLASH, "/"); return SYM_SLASH;
+                        case '(': print_token(SYM_LPAREN, "("); return SYM_LPAREN;
+                        case ')': print_token(SYM_RPAREN, ")"); return SYM_RPAREN;
+                        case ';': print_token(SYM_SEMICOLON, ";"); return SYM_SEMICOLON;
+                        case '[': print_token(SYM_LBRACKET, "["); return SYM_LBRACKET;
+                        case ']': print_token(SYM_RBRACKET, "]"); return SYM_RBRACKET;
+                        case '=': print_token(SYM_EQU, "="); return SYM_EQU;
+                        case ',': print_token(SYM_COMMA, ","); return SYM_COMMA;
+                        case '.': print_token(SYM_PERIOD, "."); return SYM_PERIOD;
+                    }
                 }
-                print_token(SYM_GTR, ">");
-                return SYM_GTR;
-            }
 
-            // 单字符符号 + 错误符号
-            int cur = ch;
-            getch();
-
-            // 单字符符号
-            {
-                switch (cur) {
-                    case '+': print_token(SYM_PLUS, "+"); return SYM_PLUS;
-                    case '-': print_token(SYM_MINUS, "-"); return SYM_MINUS;
-                    case '*': print_token(SYM_TIMES, "*"); return SYM_TIMES;
-                    case '/': print_token(SYM_SLASH, "/"); return SYM_SLASH;
-                    case '(': print_token(SYM_LPAREN, "("); return SYM_LPAREN;
-                    case ')': print_token(SYM_RPAREN, ")"); return SYM_RPAREN;
-                    case ';': print_token(SYM_SEMICOLON, ";"); return SYM_SEMICOLON;
-                    case '[': print_token(SYM_LBRACKET, "["); return SYM_LBRACKET;
-                    case ']': print_token(SYM_RBRACKET, "]"); return SYM_RBRACKET;
-                    case '=': print_token(SYM_EQU, "="); return SYM_EQU;
-                    case ',': print_token(SYM_COMMA, ","); return SYM_COMMA;
-                    case '.': print_token(SYM_PERIOD, "."); return SYM_PERIOD;
+                // 错误符号
+                {   // 非法字符 —— 使用 cur（原始字符）
+                    char illegal[2];
+                    illegal[0] = (char)cur;
+                    illegal[1] = '\0';
+                    print_token(SYM_ERROR, illegal);
+                    return SYM_ERROR;
                 }
-            }
-
-            // 错误符号
-            {   // 非法字符 —— 使用 cur（原始字符）
-                char illegal[2];
-                illegal[0] = (char)cur;
-                illegal[1] = '\0';
-                print_token(SYM_ERROR, illegal);
-                return SYM_ERROR;
-            }
 
 
-        //=========================
-        //     标识符状态
-        //=========================
-        case STATE_INID:
-            while (isalnum(ch) && k < MAX_ID_LEN - 1) {
-                buf[k++] = ch;
-                getch();
-            }
-            buf[k] = '\0';
-            {
-                int reserved = check_reserved(buf);
-                if (reserved) {
-                    print_token(reserved, buf);
-                    return reserved;
-                }
-                print_token(SYM_IDENTIFIER, buf);
-                return SYM_IDENTIFIER;
-            }
-
-        //=========================
-        //     数字状态
-        //=========================
-        case STATE_INNUM:
-            while (isdigit(ch) && k < MAX_NUM_LEN - 1) {
-                buf[k++] = ch;
-                getch();
-            }
-            // 数字后接字母：错误
-            if (isalpha(ch)) {
-                while (isalnum(ch) && k < MAX_NUM_LEN - 1) {
+            //=========================
+            //     标识符状态
+            //=========================
+            case STATE_INID:
+                while (isalnum(ch) && k < MAX_ID_LEN - 1) {
                     buf[k++] = ch;
                     getch();
                 }
                 buf[k] = '\0';
+                {
+                    int reserved = check_reserved(buf);
+                    if (reserved) {
+                        print_token(reserved, buf);
+                        return reserved;
+                    }
+                    print_token(SYM_IDENTIFIER, buf);
+                    return SYM_IDENTIFIER;
+                }
+
+            //=========================
+            //     数字状态
+            //=========================
+            case STATE_INNUM:
+                while (isdigit(ch) && k < MAX_NUM_LEN - 1) {
+                    buf[k++] = ch;
+                    getch();
+                }
+                // 数字后接字母 -> 错误
+                if (isalpha(ch)) {
+                    while (isalnum(ch) && k < MAX_NUM_LEN - 1) {
+                        buf[k++] = ch;
+                        getch();
+                    }
+                    buf[k] = '\0';
+                    print_token(SYM_ERROR, buf);
+                    return SYM_ERROR;
+                }
+                buf[k] = '\0';
+                print_token(SYM_NUMBER, buf);
+                return SYM_NUMBER;
+
+            //=========================
+            //     :=
+            //=========================
+            case STATE_INASSIGN:
+                if (ch == '=') {
+                    getch();
+                    print_token(SYM_ASSIGN, ":=");
+                    return SYM_ASSIGN;
+                }
+                buf[k] = '\0';
                 print_token(SYM_ERROR, buf);
                 return SYM_ERROR;
-            }
-            buf[k] = '\0';
-            print_token(SYM_NUMBER, buf);
-            return SYM_NUMBER;
+            
+            //=========================
+            //     注释 { ... }
+            //=========================
+            case STATE_INCOMMENT:
+                while (ch != '}' && ch != EOF && ch != '\n') {
+                    getch();
+                }
+                if (ch != '}') {
+                    print_token(SYM_ERROR, "=== Unclosed comment ===");
+                    return SYM_ERROR;
+                }
+                getch(); // 跳过 }
+                state = STATE_START;
+                break;
 
-        //=========================
-        //     :=
-        //=========================
-        case STATE_INASSIGN:
-            if (ch == '=') {
-                getch();
-                print_token(SYM_ASSIGN, ":=");
-                return SYM_ASSIGN;
-            }
-            buf[k] = '\0';
-            print_token(SYM_ERROR, buf);
-            return SYM_ERROR;
-        
-        //=========================
-        //     注释 { ... }
-        //=========================
-        case STATE_INCOMMENT:
-            while (ch != '}' && ch != EOF && ch != '\n') {
-                getch();
-            }
-            if (ch != '}') {
-                print_token(SYM_ERROR, "=== Unclosed comment ===");
-                return SYM_ERROR;
-            }
-            getch(); // 跳过 }
-            state = STATE_START;
-            break;
+            //=========================
+            //     字符串
+            //=========================
+            case STATE_INSTRING:
+                while (ch != '"' && ch != EOF && ch != '\n' && k < MAX_STR_LEN - 1) {
+                    buf[k++] = ch;
+                    getch();
+                }
+                if (ch != '"') {    // 未闭合
+                    print_token(SYM_ERROR, "=== Unclosed string ===");
+                    return SYM_ERROR;
+                }
+                getch(); // 跳过 "
+                buf[k] = '\0';
+                print_token(SYM_STRING, buf);
+                return SYM_STRING;
 
-        //=========================
-        //     字符串
-        //=========================
-        case STATE_INSTRING:
-            while (ch != '"' && ch != EOF && ch != '\n' && k < MAX_STR_LEN - 1) {
-                buf[k++] = ch;
-                getch();
-            }
-            if (ch != '"') {    // 未闭合
-                print_token(SYM_ERROR, "=== Unclosed string ===");
-                return SYM_ERROR;
-            }
-            getch(); // 跳过 "
-            buf[k] = '\0';
-            print_token(SYM_STRING, buf);
-            return SYM_STRING;
-
-        default:
-            state = STATE_ERROR;
-            break;
+            default:
+                state = STATE_ERROR;
+                break;
         } // end switch
     } // end while
 

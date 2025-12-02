@@ -107,7 +107,7 @@ void advance() {
     while (buffer[pos] != '\0' && buffer[pos] != ')') pos++;
     if (buffer[pos] == ')') pos++;
 
-    // Token → 文法字符映射
+    // Token -> 文法字符映射
     switch (current_code) {
         case SYM_IDENTIFIER:
         case SYM_NUMBER:
