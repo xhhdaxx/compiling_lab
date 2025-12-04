@@ -261,15 +261,24 @@ const char* classify_error() {
 // -----------------------------------------------------------
 void analyze_line(int line_num) {
     pos = 0;
-    printf("===================================================\n");
+    
+    // 先检查是否为空行，如果是则直接返回不输出
+    int temp_pos = 0;
+    while (buffer[temp_pos] != '\0' && 
+           (isspace(buffer[temp_pos]) || buffer[temp_pos] == ',')) {
+        temp_pos++;
+    }
+    if (buffer[temp_pos] == '\0') {
+        return;  // 空行，直接返回不输出
+    }
+    
+    printf("\n====================================================\n");
     printf("Line %d 分析: %s\n", line_num, buffer);
 
     advance();
 
     if (sym == '#') {
-        printf("----------------------------------------------------\n");
-        printf("结果: 空行\n\n");
-        return;
+        return;  // 空行，直接返回不输出
     }
 
     int success = E();
@@ -277,17 +286,17 @@ void analyze_line(int line_num) {
     if (success && (sym == '#' || sym == ';')) {
         printf("----------------------------------------------------\n");
         if (sym == '#') {
-            printf("结果: \033[32m正确 (Accept) - 无分号结尾\033[0m\n");
+            printf("结果: \033[32m正确 (Accept) - 无分号结尾\033[0m");
         }
         if (sym == ';') {
-            printf("结果: \033[32m正确 (Accept) - 分号结尾\033[0m\n");
+            printf("结果: \033[32m正确 (Accept) - 分号结尾\033[0m");
         }
     }
     else {
         printf("%s", error_msg);
 
         printf("------------------- 具体情况分析 -------------------\n");
-        printf("1. \033[31m错误位置: \033[0m\n");
+        printf("\033[31m错误位置: \033[0m\n");
 
         printf("%s\n", buffer);
 
@@ -296,14 +305,63 @@ void analyze_line(int line_num) {
             printf(" ");
         printf("^~~~~~~\n");
 
-        printf("   \033[31m错误原因: \033[0m%s\n", classify_error());
+        printf("\033[31m错误原因: \033[0m%s\n", classify_error());
         printf("----------------------------------------------------\n");
-        printf("结果: \033[31m错误 (Error)\033[0m\n\n");
+        printf("结果: \033[31m错误 (Error)\033[0m");
     }
 
 
     printf("\n");
 }
+
+// -----------------------------------------------------------
+// 自动拆分并逐句分析
+// -----------------------------------------------------------
+void split_and_analyze(const char* bigbuf) {
+    int line_num = 1;
+    const char* p = bigbuf;
+
+    // 跳过开头的空白字符
+    while (*p && (isspace(*p) || *p == ',')) {
+        p++;
+    }
+
+    while (*p) {
+        const char* end = strstr(p, "(17,\";\")");
+
+        if (end == NULL) {
+            // 最后一段（可能没有分号）
+            // 检查是否为空或只包含空白字符
+            int has_content = 0;
+            for (const char* check = p; *check; check++) {
+                if (!isspace(*check) && *check != ',') {
+                    has_content = 1;
+                    break;
+                }
+            }
+            if (has_content) {
+                strcpy(buffer, p);
+                analyze_line(line_num++);
+            }
+            break;
+        }
+
+        // 拆出一句（包含分号 token）
+        int len = end - p + strlen("(17,\";\")");
+        strncpy(buffer, p, len);
+        buffer[len] = '\0';
+
+        analyze_line(line_num++);
+
+        p = end + strlen("(17,\";\")");  // 前进到下一句开始
+        
+        // 跳过空白字符，避免处理空内容
+        while (*p && (isspace(*p) || *p == ',')) {
+            p++;
+        }
+    }
+}
+
 
 // -----------------------------------------------------------
 // 主程序
@@ -313,28 +371,29 @@ int main() {
     char filename[100];
     FILE *fp;
 
-    printf("=== 递归下降语法分析程序 (支持多行/分号) ===\n");
+    printf("=== 递归下降语法分析程序 (多句独立分析) ===\n");
     printf("1. 终端输入\n");
     printf("2. 文件读取\n");
     printf("选择: ");
     scanf("%d", &choice);
     getchar();
 
+    char bigbuf[MAX_BUF];
+    bigbuf[0] = '\0';
+
     if (choice == 1) {
         printf("请输入多行二元序列，输入 END 结束：\n");
 
-        buffer[0] = '\0';
         char line[256];
-
         while (1) {
             if (fgets(line, sizeof(line), stdin) == NULL) break;
             line[strcspn(line, "\n")] = 0;
-            if (strcmp(line, "END") == 0) break;
-            strcat(buffer, line);
-            strcat(buffer, " ");
-        }
 
-        analyze_line(1);
+            if (strcmp(line, "END") == 0) break;
+
+            strcat(bigbuf, line);
+            strcat(bigbuf, " ");
+        }
     }
     else if (choice == 2) {
         printf("文件名: ");
@@ -346,18 +405,18 @@ int main() {
             return 1;
         }
 
-        buffer[0] = '\0';
         char line[256];
-
         while (fgets(line, sizeof(line), fp) != NULL) {
             line[strcspn(line, "\n")] = 0;
-            strcat(buffer, line);
-            strcat(buffer, " ");
+            strcat(bigbuf, line);
+            strcat(bigbuf, " ");
         }
         fclose(fp);
-
-        analyze_line(1);
     }
+
+    // ---- 调用封装好的函数 ----
+    split_and_analyze(bigbuf);
+    printf("\n");
 
     return 0;
 }
