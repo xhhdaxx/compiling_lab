@@ -261,33 +261,26 @@ const char* classify_error() {
 // -----------------------------------------------------------
 void analyze_line(int line_num) {
     pos = 0;
-    printf("==================================================\n");
+    printf("===================================================\n");
     printf("Line %d 分析: %s\n", line_num, buffer);
 
     advance();
 
     if (sym == '#') {
+        printf("----------------------------------------------------\n");
         printf("结果: 空行\n\n");
         return;
     }
 
     int success = E();
 
-    if (success) {
+    if (success && (sym == '#' || sym == ';')) {
+        printf("----------------------------------------------------\n");
         if (sym == '#') {
             printf("结果: \033[32m正确 (Accept) - 无分号结尾\033[0m\n");
         }
-        else if (sym == ';') {
-            advance();
-            if (sym == '#') {
-                printf("结果: \033[32m正确 (Accept) - 分号结尾\033[0m\n");
-            } else {
-                printf("结果: \033[31m错误 (Error)\033[0m (分号后有多余字符)\n");
-            }
-        }
-        else {
-            printf("结果: \033[31m错误 (Error)\033[0m (表达式合法但末尾有多余字符 '%s')\n",
-                   lexeme);
+        if (sym == ';') {
+            printf("结果: \033[32m正确 (Accept) - 分号结尾\033[0m\n");
         }
     }
     else {
@@ -303,8 +296,8 @@ void analyze_line(int line_num) {
             printf(" ");
         printf("^~~~~~~\n");
 
-        printf("2. \033[31m错误原因: \033[0m%s\n", classify_error());
-        printf("--------------------------------------------------\n");
+        printf("   \033[31m错误原因: \033[0m%s\n", classify_error());
+        printf("----------------------------------------------------\n");
         printf("结果: \033[31m错误 (Error)\033[0m\n\n");
     }
 
