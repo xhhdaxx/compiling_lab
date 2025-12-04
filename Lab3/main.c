@@ -126,7 +126,15 @@ void init_grammar()
         for (int j = 0; j < VT_NUM; j++)
             LL1Table[i][j] = -1;
 
-    // 填表
+    // 构造分析表
+    /* 
+            i   +   *   (   )   #
+        E   0           0        
+        E'      1           2   2
+        T   3           3        
+        T'      5   4       5   5
+        F   7           6        
+    */
     LL1Table[VN_E][SYM_i] = 0;
     LL1Table[VN_E][SYM_LPAREN] = 0;
     LL1Table[VN_Ep][SYM_PLUS] = 1;
