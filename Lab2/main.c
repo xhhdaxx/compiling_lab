@@ -239,11 +239,11 @@ const char* classify_error() {
     if (left > right)
         return "缺少封闭括号";
 
-    // 2. 若出错符号为 ';' 或 ')', 多为缺少运算量
+    // 2. 缺少运算量
     if (error_sym == ';' || error_sym == ')' || error_sym == '+' || error_sym == '*')
         return "缺少运算量";
 
-    // 3. 若出错符号为 'i' 或 '('，但规则失败，多为缺少运算符
+    // 3. 缺少运算符
     if (error_sym == 'i' || error_sym == '(')
         return "缺少运算符";
 
